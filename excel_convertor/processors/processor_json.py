@@ -32,10 +32,31 @@ class xProcessorJson(xBaseProcessor) :
 		
 		strContent  = ''
 		strContent += '{'
+
+		if p_nCategoryLevel <= 0 :
+			if p_mapExportConfigs['EXPORTS'][self.Type]['FORMAT_DATA'] :
+				strContent += '\n\t'
+
+			strContent += '"datas"'
+
+			if p_mapExportConfigs['EXPORTS'][self.Type]['FORMAT_DATA'] :
+				strContent += ' : ['
+			else :
+				strContent += ':['
+
 		strContent += self.__ConvertJsonContent(p_mapExportConfigs, p_mapDataSheetConfigs, p_mapPreloadDataMaps, lstCategoryLevelColumnIndexIndexs, p_nCategoryLevel, mapGenerateControl)
 		
 		if p_mapExportConfigs['EXPORTS'][self.Type]['FORMAT_DATA'] :
 			strContent += '\n'
+
+		if p_nCategoryLevel <= 0 :
+			if p_mapExportConfigs['EXPORTS'][self.Type]['FORMAT_DATA'] :
+				strContent += '\t'
+
+			strContent += ']'
+
+			if p_mapExportConfigs['EXPORTS'][self.Type]['FORMAT_DATA'] :
+				strContent += '\n'
 
 		strContent += '}\n'
 
@@ -66,8 +87,13 @@ class xProcessorJson(xBaseProcessor) :
 				if mixKey is None :
 					continue
 				
+				nIdentCount = p_mapGenerateControl['level_index']
+
+				if p_nCategoryLevel <= 0 :
+					nIdentCount += 1
+
 				if p_mapExportConfigs['EXPORTS'][self.Type]['FORMAT_DATA'] :
-					strContent += '\n{0}'.format(self.GenerateIdentIdentifier(p_mapGenerateControl['level_index'], p_mapGenerateControl['ident']))
+					strContent += '\n{0}'.format(self.GenerateIdentIdentifier(nIdentCount, p_mapGenerateControl['ident']))
 				
 				strKey = '{0}'.format(mixKey)
 				strKey = strKey.replace('"', '\\"')
@@ -87,10 +113,10 @@ class xProcessorJson(xBaseProcessor) :
 				strContent += self.__ConvertJsonContent(p_mapExportConfigs, p_mapDataSheetConfigs, p_mixPreloadDatas[mixKey], p_lstCategoryLevelColumnIndexIndexs, p_nCategoryLevel, p_mapGenerateControl)
 				
 				if p_mapExportConfigs['EXPORTS'][self.Type]['FORMAT_DATA'] and p_mapGenerateControl['level_index'] < len(p_lstCategoryLevelColumnIndexIndexs) :
-					strContent += '\n{0}'.format(self.GenerateIdentIdentifier(p_mapGenerateControl['level_index'], p_mapGenerateControl['ident']))
+					strContent += '\n{0}'.format(self.GenerateIdentIdentifier(nIdentCount, p_mapGenerateControl['ident']))
 				
 				if p_mapExportConfigs['EXPORTS'][self.Type]['FORMAT_DATA'] and type(p_mixPreloadDatas[mixKey]) == list and len(p_mixPreloadDatas[mixKey]) > 1 :
-					strContent += '\n{0}'.format(self.GenerateIdentIdentifier(p_mapGenerateControl['level_index'], p_mapGenerateControl['ident']))
+					strContent += '\n{0}'.format(self.GenerateIdentIdentifier(nIdentCount, p_mapGenerateControl['ident']))
 					
 				if type(p_mixPreloadDatas[mixKey]) == list and len(p_mixPreloadDatas[mixKey]) > 1 :
 					strContent += '],'
@@ -107,6 +133,11 @@ class xProcessorJson(xBaseProcessor) :
 			strContent = ''
 
 			nDataBlock = 0
+			
+			nIdentCount = p_mapGenerateControl['level_index']
+
+			if p_nCategoryLevel <= 0 :
+				nIdentCount += 1
 
 			for mapLineDatas in p_mixPreloadDatas :
 				nDataColumnIndex = 0
@@ -117,7 +148,7 @@ class xProcessorJson(xBaseProcessor) :
 
 				if nPreloadDataSize > 1 :
 					if p_mapExportConfigs['EXPORTS'][self.Type]['FORMAT_DATA'] :
-						strContent += '\n{0}'.format(self.GenerateIdentIdentifier(p_mapGenerateControl['level_index'] + 1, p_mapGenerateControl['ident']))
+						strContent += '\n{0}'.format(self.GenerateIdentIdentifier(nIdentCount + 1, p_mapGenerateControl['ident']))
 					strContent += '{'
 
 				for nColumnIndex in p_mapDataSheetConfigs :
