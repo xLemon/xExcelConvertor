@@ -6,3 +6,4 @@ from .processor_xml import *
 from .processor_php import *
 from .processor_sql import *
 from .processor_json import *
+from .processor_ini import *
