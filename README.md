@@ -19,7 +19,7 @@ xExcelConvertor使用[**Python**](https://www.python.org/)编写，基于2.7.x�
 - 每张工作表的字段支持设置不同的导出格式，但工作表字段的导出格式受限于该工作表自身的导出格式（举个栗子：工作表Sheet1设置的导出格式为SQL、XML、PHP，因此Sheet1中配置的字段的导出格式最多也仅支持SQL、XML、PHP，多了也会被无视的- -#）
 
 #全局导出配置说明
-***
+
 全局导出配置定义在export_config.ini文件中，其格式及说明如下：
 
 ```ini
@@ -203,7 +203,6 @@ export_language  = ara                          ; 删除该项则使用[GLOBAL]�
 	</tr>
 </table>
 
-<br>
 当不对数据进行折叠时（分类层级 = 0），是正常的按行导出，以json格式为例，导出结果如下：
 
 
@@ -348,10 +347,8 @@ export_language  = ara                          ; 删除该项则使用[GLOBAL]�
 
 这样就能达到我们的要求了，实际的栗子可以在example中找到，童鞋们可以亲自动手导出试试。
 
-<br>
-
 #导出格式的扩展
-***
+
 xExcelConvertor支持对导出格式的扩展，所有支持的导出格式操作类都存放于excel_convertor/processors/目录下，若要增加某种格式的支持，请按以下步骤操作（这里以新增csv格式为例）：
 
 - 在excel_convertor/processors/目录下新增processor_csv.py文件，**文件名必须以'processor_'开头。**
