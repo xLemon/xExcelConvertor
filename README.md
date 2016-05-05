@@ -209,14 +209,16 @@ export_language  = ara                          ; 删除该项则使用[GLOBAL]�
 
 ```json
 {
-    { "id" : 1, "name" : "物品_1", "dscp" : "描述_1", "icon" : "icon_1", "type" : 1, "quality" : 1, "pack_limit" : 99, "price" : 100},
-	{ "id" : 2, "name" : "物品_2", "dscp" : "描述_2", "icon" : "icon_2", "type" : 1, "quality" : 2, "pack_limit" : 99, "price" : 100},
-	{ "id" : 3, "name" : "物品_3", "dscp" : "描述_3", "icon" : "icon_3", "type" : 2, "quality" : 1, "pack_limit" : 99, "price" : 100},
-	{ "id" : 4, "name" : "物品_4", "dscp" : "描述_4", "icon" : "icon_4", "type" : 2, "quality" : 2, "pack_limit" : 99, "price" : 100},
-	{ "id" : 5, "name" : "物品_5", "dscp" : "描述_5", "icon" : "icon_5", "type" : 3, "quality" : 1, "pack_limit" : 99, "price" : 100},
-	{ "id" : 6, "name" : "物品_6", "dscp" : "描述_6", "icon" : "icon_6", "type" : 3, "quality" : 2, "pack_limit" : 99, "price" : 100},
-	{ "id" : 7, "name" : "物品_7", "dscp" : "描述_7", "icon" : "icon_7", "type" : 4, "quality" : 1, "pack_limit" : 99, "price" : 100},
-	{ "id" : 8, "name" : "物品_8", "dscp" : "描述_8", "icon" : "icon_8", "type" : 4, "quality" : 2, "pack_limit" : 99, "price" : 100}
+	"datas" : [
+	    { "id" : 1, "name" : "物品_1", "dscp" : "描述_1", "icon" : "icon_1", "type" : 1, "quality" : 1, "pack_limit" : 99, "price" : 100},
+		{ "id" : 2, "name" : "物品_2", "dscp" : "描述_2", "icon" : "icon_2", "type" : 1, "quality" : 2, "pack_limit" : 99, "price" : 100},
+		{ "id" : 3, "name" : "物品_3", "dscp" : "描述_3", "icon" : "icon_3", "type" : 2, "quality" : 1, "pack_limit" : 99, "price" : 100},
+		{ "id" : 4, "name" : "物品_4", "dscp" : "描述_4", "icon" : "icon_4", "type" : 2, "quality" : 2, "pack_limit" : 99, "price" : 100},
+		{ "id" : 5, "name" : "物品_5", "dscp" : "描述_5", "icon" : "icon_5", "type" : 3, "quality" : 1, "pack_limit" : 99, "price" : 100},
+		{ "id" : 6, "name" : "物品_6", "dscp" : "描述_6", "icon" : "icon_6", "type" : 3, "quality" : 2, "pack_limit" : 99, "price" : 100},
+		{ "id" : 7, "name" : "物品_7", "dscp" : "描述_7", "icon" : "icon_7", "type" : 4, "quality" : 1, "pack_limit" : 99, "price" : 100},
+		{ "id" : 8, "name" : "物品_8", "dscp" : "描述_8", "icon" : "icon_8", "type" : 4, "quality" : 2, "pack_limit" : 99, "price" : 100}
+	]
 }
 ```
 
