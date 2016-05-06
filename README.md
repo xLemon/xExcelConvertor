@@ -4,17 +4,17 @@
 
 #环境
 
-xExcelConvertor使用[**Python**](https://www.python.org/)编写，基于2.7.x版本（本人使用的是2.7.11），解析Excel依赖的库是非常强大的[**openpyxl**](http://openpyxl.readthedocs.org/)，安装完[**Python**](https://www.python.org/)以及[**openpyxl**](http://openpyxl.readthedocs.org/)之后，就可以直接使用xExcelConvertor将Excel中的各个工作表导出成各自想要的格式了。
+xExcelConvertor使用[**Python**](https://www.python.org/)编写，基于2.7.x版本（本人使用的是2.7.11），依赖Excel解析库[**openpyxl**](http://openpyxl.readthedocs.org/)，安装完[**Python**](https://www.python.org/)以及[**openpyxl**](http://openpyxl.readthedocs.org/)之后，就可以直接使用xExcelConvertor将Excel中的各个工作表导出成各自想要的格式了。
 
 #特性：
 
-- 支持同时导出多种格式：Lua、PHP、XML、JSON、SQL（由于本人精力有限，更多格式的支持劳请各位童鞋自行扩展，也欢迎pull request）
+- 支持同时导出多种格式：Lua、PHP、XML、JSON、SQL、INI
 - 支持多种格式的Excel文件：xlsx、xlsm、xltx、xltm（具体支持格式由[**openpyxl**](http://openpyxl.readthedocs.org/)决定）
 - 支持不同的格式导出到不同的目录
 - 支持指定一个输入目录，将需要导出的Excel放入该目录中即可批量导出，该目录也支持递归处理（可关闭递归处理）
 - 支持导出数据的格式化与否（仅XML及JSON格式），若对导出的配置文件体积比较敏感的，可以将数据格式化选项关闭
 - 支持多语言字段导出（语言代码可以依各位童鞋的项目喜好而定）
-- 支持折叠数据，每张数据表（工作表）只需要指定一个折叠的级别数即可支持（SQL格式除外）
+- 支持折叠数据，每张数据表（工作表）只需要指定一个折叠的级别数即可支持（SQL、INI格式除外）
 - 支持自定义Excel工作簿中每张工作表的导出格式，或关闭某（几）张工作表的导出
 - 每张工作表的字段支持设置不同的导出格式，但工作表字段的导出格式受限于该工作表自身的导出格式（举个栗子：工作表Sheet1设置的导出格式为SQL、XML、PHP，因此Sheet1中配置的字段的导出格式最多也仅支持SQL、XML、PHP，多了也会被无视的- -#）
 
@@ -54,6 +54,10 @@ export_language  = cht                          ; 删除该项则使用[GLOBAL]�
 [EXPORT_JSON]
 export_directory = ${SCRIPT_PATH}../export/json ; 导出的JSON格式文件要保存的目录
 export_language  = ara                          ; 删除该项则使用[GLOBAL]中的同名配置，否则使用当前section的配置
+
+[EXPORT_INI]
+export_directory = ${SCRIPT_PATH}../export/ini  ; 导出的INI格式文件要保存的目录
+export_language  = kor                          ; 删除该项则使用[GLOBAL]中的同名配置，否则使用当前section的配置
 ```
 
 #全局导出配置关键项说明
