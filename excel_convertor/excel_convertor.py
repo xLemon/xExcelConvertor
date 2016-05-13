@@ -323,6 +323,12 @@ def __ProcessDump(p_mapExportConfigs, p_lstExportTypes) :
 				mapDatabaseConfigs['DATABASE_COLLATE']  = cCell[xConstantData.INDEX_SHEET_GLOBAL_COLUMN_DATABASE_COLLATE].value  # 数据库校对规则
 				mapDatabaseConfigs['DATA_TABLE_PREFIX'] = cCell[xConstantData.INDEX_SHEET_GLOBAL_COLUMN_DATA_TABLE_PREFIX].value # 数据表前缀
 
+				if mapDatabaseConfigs['DATABASE_NAME'] is None :
+					mapDatabaseConfigs['DATABASE_NAME'] = ''
+
+				if mapDatabaseConfigs['DATA_TABLE_PREFIX'] is None :
+					mapDatabaseConfigs['DATA_TABLE_PREFIX'] = ''
+
 			nRowIndex += 1
 
 			if (nRowIndex - 1) <= nIgnoreRows :
