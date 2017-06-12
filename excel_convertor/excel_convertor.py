@@ -290,7 +290,7 @@ def __ProcessDump(p_mapExportConfigs, p_lstExportTypes) :
 
 		print('正在加载工作簿 : {0}'.format(strFileName))
 
-		cWorkbook = load_workbook(filename = strFilePath, read_only = False, use_iterators = True, data_only = True)
+		cWorkbook = load_workbook(filename = strFilePath, read_only = False, data_only = True)
 
 		strWorkbookName = xFileUtility.GetFileNameFromPath(strFilePath, True)
 
