@@ -9,16 +9,19 @@ class xConstantData :
 	SUPPORTED_EXCEL_FORMATS = ('xlsx', 'xlsm', 'xltx', 'xltm')
 
 	MYSQL_DATA_DEFINITIONS              = { }
-	MYSQL_DATA_DEFINITIONS['TINYINT']   = { 'NAME' : 'TINYINT',   'LENGTH' : 4,   'IS_STRING' : False, 'COLLATE' : False }
-	MYSQL_DATA_DEFINITIONS['SMALLINT']  = { 'NAME' : 'SMALLINT',  'LENGTH' : 6,   'IS_STRING' : False, 'COLLATE' : False }
-	MYSQL_DATA_DEFINITIONS['MEDIUMINT'] = { 'NAME' : 'MEDIUMINT', 'LENGTH' : 9,   'IS_STRING' : False, 'COLLATE' : False }
-	MYSQL_DATA_DEFINITIONS['INT']       = { 'NAME' : 'INT',       'LENGTH' : 11,  'IS_STRING' : False, 'COLLATE' : False }
-	MYSQL_DATA_DEFINITIONS['BIGINT']    = { 'NAME' : 'BIGINT',    'LENGTH' : 20,  'IS_STRING' : False, 'COLLATE' : False }
-	MYSQL_DATA_DEFINITIONS['CHAR']      = { 'NAME' : 'CHAR',      'LENGTH' : 40,  'IS_STRING' : True,  'COLLATE' : True  }
-	MYSQL_DATA_DEFINITIONS['VARCHAR']   = { 'NAME' : 'VARCHAR',   'LENGTH' : 255, 'IS_STRING' : True,  'COLLATE' : True  }
-	MYSQL_DATA_DEFINITIONS['TINYTEXT']  = { 'NAME' : 'TINYTEXT',  'LENGTH' : 0,   'IS_STRING' : True,  'COLLATE' : True  }
-	MYSQL_DATA_DEFINITIONS['TEXT']      = { 'NAME' : 'TEXT',      'LENGTH' : 0,   'IS_STRING' : True,  'COLLATE' : True  }
-	MYSQL_DATA_DEFINITIONS['LONGTEXT']  = { 'NAME' : 'LONGTEXT',  'LENGTH' : 0,   'IS_STRING' : True,  'COLLATE' : True  }
+	MYSQL_DATA_DEFINITIONS['TINYINT']   = { 'NAME' : 'TINYINT',   'LENGTH' : 4,   'IS_STRING' : False, 'IS_NUMERIC' : True,  'IS_INTEGER' : True,  'IS_FLOAT' : False, 'COLLATE' : False }
+	MYSQL_DATA_DEFINITIONS['SMALLINT']  = { 'NAME' : 'SMALLINT',  'LENGTH' : 6,   'IS_STRING' : False, 'IS_NUMERIC' : True,  'IS_INTEGER' : True,  'IS_FLOAT' : False, 'COLLATE' : False }
+	MYSQL_DATA_DEFINITIONS['MEDIUMINT'] = { 'NAME' : 'MEDIUMINT', 'LENGTH' : 9,   'IS_STRING' : False, 'IS_NUMERIC' : True,  'IS_INTEGER' : True,  'IS_FLOAT' : False, 'COLLATE' : False }
+	MYSQL_DATA_DEFINITIONS['INT']       = { 'NAME' : 'INT',       'LENGTH' : 11,  'IS_STRING' : False, 'IS_NUMERIC' : True,  'IS_INTEGER' : True,  'IS_FLOAT' : False, 'COLLATE' : False }
+	MYSQL_DATA_DEFINITIONS['BIGINT']    = { 'NAME' : 'BIGINT',    'LENGTH' : 20,  'IS_STRING' : False, 'IS_NUMERIC' : True,  'IS_INTEGER' : True,  'IS_FLOAT' : False, 'COLLATE' : False }
+	MYSQL_DATA_DEFINITIONS['CHAR']      = { 'NAME' : 'CHAR',      'LENGTH' : 40,  'IS_STRING' : True,  'IS_NUMERIC' : False, 'IS_INTEGER' : False, 'IS_FLOAT' : False, 'COLLATE' : True  }
+	MYSQL_DATA_DEFINITIONS['VARCHAR']   = { 'NAME' : 'VARCHAR',   'LENGTH' : 255, 'IS_STRING' : True,  'IS_NUMERIC' : False, 'IS_INTEGER' : False, 'IS_FLOAT' : False, 'COLLATE' : True  }
+	MYSQL_DATA_DEFINITIONS['TINYTEXT']  = { 'NAME' : 'TINYTEXT',  'LENGTH' : 0,   'IS_STRING' : True,  'IS_NUMERIC' : False, 'IS_INTEGER' : False, 'IS_FLOAT' : False, 'COLLATE' : True  }
+	MYSQL_DATA_DEFINITIONS['TEXT']      = { 'NAME' : 'TEXT',      'LENGTH' : 0,   'IS_STRING' : True,  'IS_NUMERIC' : False, 'IS_INTEGER' : False, 'IS_FLOAT' : False, 'COLLATE' : True  }
+	MYSQL_DATA_DEFINITIONS['LONGTEXT']  = { 'NAME' : 'LONGTEXT',  'LENGTH' : 0,   'IS_STRING' : True,  'IS_NUMERIC' : False, 'IS_INTEGER' : False, 'IS_FLOAT' : False, 'COLLATE' : True  }
+
+	PATH_SEPARATOR  = '|'
+	PATH_IDENTIFIER = '${SCRIPT_PATH}'
 
 	EXPORT_IDENTIFIER_ALL   = 'all'
 	EXPORT_IDENTIFIER_NONE  = 'none'
@@ -40,12 +43,14 @@ class xConstantData :
 	INDEX_SHEET_GLOBAL_COLUMN_DATABASE_COLLATE  = 5 # 数据库校对规则
 	INDEX_SHEET_GLOBAL_COLUMN_DATA_TABLE_PREFIX = 7 # 数据表前缀
 
-	INDEX_SHEET_DATA_COLUMN_NAME          = 0 # 所在Sheet
-	INDEX_SHEET_DATA_COLUMN_ALIAS         = 1 # 资源名称
-	INDEX_SHEET_DATA_COLUMN_TABLE_ENGINE  = 2 # 数据表引擎
-	INDEX_SHEET_DATA_COLUMN_TABLE_CHARSET = 3 # 数据表字符集
-	INDEX_SHEET_DATA_COLUMN_TABLE_COLLATE = 4 # 数据表校对规则
-	INDEX_SHEET_DATA_COLUMN_ENABLE        = 5 # 导出类型
+	INDEX_SHEET_DATA_COLUMN_NAME                   = 0 # 所在Sheet
+	INDEX_SHEET_DATA_COLUMN_ALIAS                  = 1 # 资源名称
+	INDEX_SHEET_DATA_COLUMN_TABLE_ENGINE           = 2 # 数据表引擎
+	INDEX_SHEET_DATA_COLUMN_TABLE_CHARSET          = 3 # 数据表字符集
+	INDEX_SHEET_DATA_COLUMN_TABLE_COLLATE          = 4 # 数据表校对规则
+	INDEX_SHEET_DATA_COLUMN_ENABLE                 = 5 # 导出类型
+	INDEX_SHEET_DATA_COLUMN_STRUCTURE_ONLY         = 6 # 仅结构（仅对sql有效）
+	INDEX_SHEET_DATA_COLUMN_EXPORT_EMPTY_DATA_ITEM = 7 # 是否导出空数据项（默认 True）
 
 	# ##################################################################################
 	# DATA_SHEET

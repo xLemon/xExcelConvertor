@@ -14,8 +14,8 @@ from utilities.file_utility import xFileUtility
 from definitions.constant_data import xConstantData
 
 class xProcessorLua(xBaseProcessor) :
-	def __init__(self) :
-		return super(xProcessorLua, self).__init__('LUA')
+	def __init__(self, p_strSuffix, p_strConfig) :
+		return super(xProcessorLua, self).__init__('LUA', p_strSuffix, p_strConfig)
 	
 	def ProcessExport(self, p_strWorkbookName, p_cWorkbook, p_cWorkSheet, p_mapExportConfigs, p_mapDatabaseConfigs, p_mapIndexSheetConfigs, p_mapDataSheetConfigs, p_mapPreloadDataMaps, p_nCategoryLevel) :
 		print('>>>>> 正在处理 工作表 [{0}] => [{1}]'.format(p_mapIndexSheetConfigs['DATA_SHEET'], self.Type.lower()))
@@ -24,7 +24,7 @@ class xProcessorLua(xBaseProcessor) :
 
 		self.PrepareExportDirectory(strExportDirectory)
 		
-		lstCategoryLevelColumnIndexIndexs = self.GetCategoryLevelColumnIndexList(p_nCategoryLevel, self.Type, p_mapExportConfigs, p_mapDataSheetConfigs)
+		lstCategoryLevelColumnIndexIndexs = self.GetCategoryLevelColumnIndexList(p_nCategoryLevel, self.Config, p_mapExportConfigs, p_mapDataSheetConfigs)
 		
 		mapGenerateControl                = { }
 		mapGenerateControl['level_index'] = 0
@@ -48,7 +48,7 @@ class xProcessorLua(xBaseProcessor) :
 		strContent += '\n'
 		strContent += 'return _tblDatas\n'
 
-		strFileName = '{0}.{1}'.format(p_mapIndexSheetConfigs['DATA_FILE_NAME'], self.Type.lower())
+		strFileName = '{0}.{1}'.format(p_mapIndexSheetConfigs['DATA_FILE_NAME'], self.Suffix.lower())
 		strFilePath = os.path.join(strExportDirectory, strFileName)
 
 		xFileUtility.DeleteFile(strFilePath)
@@ -118,17 +118,17 @@ class xProcessorLua(xBaseProcessor) :
 					strContent += '{'
 
 				for nColumnIndex in p_mapDataSheetConfigs :
-					if not xExportHelper.IsDataSheetColumnLanguageAvailable(p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_LANGUAGE_CODE], self.Type, p_mapExportConfigs) :
+					if not xExportHelper.IsDataSheetColumnLanguageAvailable(p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_LANGUAGE_CODE], self.Config, p_mapExportConfigs) :
 						continue
 
-					if not xExportHelper.IsDataSheetColumnExportTypeAvailable(p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_EXPORT_IDENTIFIER], self.Type, p_mapExportConfigs) :
+					if not xExportHelper.IsDataSheetColumnExportTypeAvailable(p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_EXPORT_IDENTIFIER], self.Config, p_mapExportConfigs) :
 						continue
 
 					# if p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_AUTO_INCREMENT_IDENTIFIER] is not None :
 						# continue
 
 					strCellValue = ''
-					strFieldName = xExportHelper.GetFieldNameAsI18N(p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_FIELD], p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_LANGUAGE_CODE], self.Type, p_mapExportConfigs)
+					strFieldName = xExportHelper.GetFieldNameAsI18N(p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_FIELD], p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_LANGUAGE_CODE], self.Config, p_mapExportConfigs)
 
 					if mapLineDatas[strFieldName] is None :
 						if p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_DEFAULT_VALUE] is not None :

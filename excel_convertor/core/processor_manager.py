@@ -5,6 +5,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import os
+import sys
 
 from utilities.file_utility import xFileUtility
 
@@ -23,16 +24,17 @@ class xProcessorManager(object) :
 		return xFileUtility.IsFileOrDirectoryExist(strProcessorFilePath)
 	
 	@staticmethod
-	def GetProcessorInstance(p_strType) :
+	def GetProcessorInstance(p_strProcessorType, p_strSuffix, p_strConfig) :
 		cProcessor = None
 
-		strProcessorPath = 'processors.processor_{0}'.format(p_strType.lower())
+		strProcessorPath = 'processors.processor_{0}'.format(p_strProcessorType.lower())
 
 		try :
-			cProcessor = __import__(strProcessorPath, None, None, ('xProcessor{0}'.format(p_strType.lower().capitalize())))
+			sys.path.append('processors')
+			cProcessor = __import__(strProcessorPath, None, None, ('xProcessor{0}'.format(p_strProcessorType.lower().capitalize())), 1)
 		except Exception as cException :
-			raise Exception('Processor : "{0}" Import Fail!'.format(strProcessorPath))
+			raise Exception('Processor : "{0}" Import Fail! msg : {1}'.format(strProcessorPath, cException.message))
 		
-		cProcessorClass = getattr(cProcessor, 'xProcessor{0}'.format(p_strType.lower().capitalize()))
+		cProcessorClass = getattr(cProcessor, 'xProcessor{0}'.format(p_strProcessorType.lower().capitalize()))
 
-		return cProcessorClass()
+		return cProcessorClass(p_strSuffix, p_strConfig)

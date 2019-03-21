@@ -63,28 +63,19 @@ def __IsValidFile(p_strFileName) :
 
 	return True
 
-def __FixExportTypes(p_lstExportTypes, p_lstSupporttedTypes) :
+def __FixExportTypes(p_lstExportTypes, p_mapSupporttedTypes) :
 	if len(p_lstExportTypes) <= 0 :
-		return []
+		return {}
 
-	lstExportTypes       = __UniqifyList(p_lstExportTypes)
-	lstUnsupporttedTypes = []
+	lstExportTypes = __UniqifyList(p_lstExportTypes)
+
+	mapExportTypes = {}
 
 	for strExportType in lstExportTypes :
-		nTypeIndex = lstExportTypes.index(strExportType)
+		if p_mapSupporttedTypes.has_key(strExportType) :
+			mapExportTypes[strExportType] = p_mapSupporttedTypes[strExportType]
 
-		if not __HasExportType(strExportType, p_lstSupporttedTypes) :
-			lstUnsupporttedTypes.append(nTypeIndex)
-
-		lstExportTypes[nTypeIndex] = strExportType.upper()
-
-	if len(lstUnsupporttedTypes) > 0 :
-		lstUnsupporttedTypes.reverse()
-
-		for nTypeIndex in lstUnsupporttedTypes :
-			lstExportTypes.pop(nTypeIndex)
-
-	return lstExportTypes
+	return mapExportTypes
 
 def __FixPathSeparator(p_strPath) :
 	if not isinstance(p_strPath, basestring) or len(p_strPath) <= 0 :
@@ -96,21 +87,42 @@ def __FixPathSeparator(p_strPath) :
 		return p_strPath.replace('\\', os.sep)
 
 def __FixOptionValue(p_mixValue) :
-	if not isinstance(p_mixValue, basestring) :
+	if not isinstance(p_mixValue, basestring) or not p_mixValue.strip() :
 		return p_mixValue
 
-	if -1 == p_mixValue.find('\\') and -1 == p_mixValue.find('/') :
+	lstPaths = []
+
+	if -1 != p_mixValue.find(xConstantData.PATH_SEPARATOR) :
+		lstParts = p_mixValue.split(xConstantData.PATH_SEPARATOR)
+
+		for strPart in lstParts :
+			if -1 == strPart.find(xConstantData.PATH_IDENTIFIER) and not os.path.isabs(strPart) :
+				continue
+			else :
+				lstPaths.append(strPart)
+	elif -1 != p_mixValue.find(xConstantData.PATH_IDENTIFIER) or os.path.isabs(p_mixValue) :
+		lstPaths.append(p_mixValue)
+	else :
 		return p_mixValue
-	
-	strValue = __FixPathSeparator(p_mixValue)
 
-	if -1 != p_mixValue.find('${SCRIPT_PATH}') :
-		strValue = strValue.replace('${SCRIPT_PATH}', '{0}{1}'.format(os.path.abspath('.'), os.sep))
+	if len(lstPaths) <= 0 :
+		return ''
 
-	if 0 != cmp(strValue[-1], os.sep) :
-		strValue += os.sep
+	for i, strPath in enumerate(lstPaths) :
+		if -1 == strPath.find('\\') and -1 == strPath.find('/') :
+			continue
+		
+		strPath = __FixPathSeparator(strPath)
 
-	return strValue
+		if -1 != strPath.find(xConstantData.PATH_IDENTIFIER) :
+			strPath = strPath.replace(xConstantData.PATH_IDENTIFIER, '{0}{1}'.format(os.path.abspath('.'), os.sep))
+
+		if 0 != cmp(strPath[-1], os.sep) :
+			strPath += os.sep
+		
+		lstPaths[i] = strPath
+
+	return xConstantData.PATH_SEPARATOR.join(lstPaths)
 
 def __SetupOptionValue(p_mapConfigs, p_strKey, p_mixValue) :
 	strKey = p_strKey.upper()
@@ -145,13 +157,12 @@ def __AnalysisConfigs(p_strConfigFilePath) :
 	lstSections = cConfigParser.sections()
 
 	if len(lstSections) <= 0 :
-		raise Exception('配置文件"{0}"没有指定配置项！'.format(strConfigFile))
+		raise Exception('配置文件"{0}"没有指定配置项！'.format(p_strConfigFilePath))
 
 	if not 'GLOBAL' in lstSections :
 		raise Exception('配置文件缺少GLOBAL配置项')
 
-	lstExportTypes = []
-
+	mapExportTypes   = {}
 	mapGlobalConfigs = {}
 	mapExportConfigs = {}
 
@@ -179,11 +190,6 @@ def __AnalysisConfigs(p_strConfigFilePath) :
 
 		strExportType = strSection[7:].upper()
 
-		if xProcessorManager.IsProcessorExist(strExportType) :
-			lstExportTypes.append(strExportType)
-		else :
-			print('跳过不支持的导出格式 : {0}，若要支持该格式，请在{1}目录中扩展'.format(strExportType, xProcessorManager.GetProcessorPath()))
-
 		if mapExportConfigs.get('EXPORTS') is None :
 			mapExportConfigs['EXPORTS'] = {}
 
@@ -199,7 +205,27 @@ def __AnalysisConfigs(p_strConfigFilePath) :
 		if mapExportConfigs['EXPORTS'][strExportType].get('EXCEL_DIRECTORY') is not None :
 			mapExportConfigs['EXPORTS'][strExportType].pop('EXCEL_DIRECTORY')
 
-		if strExportType != 'SQL' :
+		bIgnore = False
+
+		if mapExportConfigs['EXPORTS'][strExportType].get('EXPORT_PROCESSOR') is None or len(mapExportConfigs['EXPORTS'][strExportType]['EXPORT_PROCESSOR']) <= 0 :
+			print('{0} : 必须配置导出处理器'.format(strExportType))
+			bIgnore = True
+		else :
+			if xProcessorManager.IsProcessorExist(mapExportConfigs['EXPORTS'][strExportType]['EXPORT_PROCESSOR']) :
+				mapExportTypes[strExportType] = mapExportConfigs['EXPORTS'][strExportType]['EXPORT_PROCESSOR'].lower()
+			else :
+				print('跳过不支持的导出格式 : {0}，若要支持该格式，请在{1}目录中扩展'.format(strExportType, xProcessorManager.GetProcessorPath()))
+				bIgnore = True
+
+		if bIgnore :
+			if mapExportConfigs['EXPORTS'].get(strExportType) is not None :
+				mapExportConfigs['EXPORTS'].pop(strExportType)
+			continue
+
+		if mapExportConfigs['EXPORTS'][strExportType].get('EXPORT_SUFFIX') is None or len(mapExportConfigs['EXPORTS'][strExportType]['EXPORT_SUFFIX']) <= 0 :
+			mapExportConfigs['EXPORTS'][strExportType]['EXPORT_SUFFIX'] = mapExportConfigs['EXPORTS'][strExportType]['EXPORT_PROCESSOR'].lower()
+
+		if mapExportConfigs['EXPORTS'][strExportType]['EXPORT_PROCESSOR'].upper() != 'SQL' :
 			continue
 
 		if mapExportConfigs['EXPORTS'][strExportType].get('FORMAT_DATA') is not None :
@@ -210,9 +236,9 @@ def __AnalysisConfigs(p_strConfigFilePath) :
 
 	cFile.close()
 
-	return mapExportConfigs, lstExportTypes
+	return mapExportConfigs, mapExportTypes
 
-def __AnalysisIndexSheetConfigs(p_cIndexSheet, p_cCell, p_nRowIndex, p_lstExportTypes) :
+def __AnalysisIndexSheetConfigs(p_cIndexSheet, p_cCell, p_nRowIndex, p_mapExportTypes) :
 	if p_cCell[xConstantData.INDEX_SHEET_DATA_COLUMN_ENABLE].value is None :
 		return True, True, {}, None # 没有配置导出项，跳过
 
@@ -222,16 +248,29 @@ def __AnalysisIndexSheetConfigs(p_cIndexSheet, p_cCell, p_nRowIndex, p_lstExport
 	if p_cCell[xConstantData.INDEX_SHEET_DATA_COLUMN_ALIAS].value is None :
 		return False, False, {}, '错误：工作表 [{0}] [{1}{2}] 单元格未配置!'.format(p_cIndexSheet.title, xExcelHelper.ConvertColumnIndexToColumnName(xConstantData.INDEX_SHEET_DATA_COLUMN_ALIAS), p_nRowIndex)
 
+	bExportEmptyDataItem = True
+
+	strExportEmptyDataItemValue = p_cCell[xConstantData.INDEX_SHEET_DATA_COLUMN_EXPORT_EMPTY_DATA_ITEM].value
+
+	if strExportEmptyDataItemValue is not None :
+		if strExportEmptyDataItemValue.lower() == xConstantData.EXPORT_IDENTIFIER_TRUE or strExportEmptyDataItemValue.lower() == xConstantData.EXPORT_IDENTIFIER_YES :
+			bExportEmptyDataItem = True
+		elif strExportEmptyDataItemValue.lower() == xConstantData.EXPORT_IDENTIFIER_FALSE or strExportEmptyDataItemValue.lower() == xConstantData.EXPORT_IDENTIFIER_NO :
+			bExportEmptyDataItem = False
+		else :
+			bExportEmptyDataItem = True
+
 	mapIndexSheetConfigs = {}
 
 	mapIndexSheetConfigs['DATA_SHEET']              = p_cCell[xConstantData.INDEX_SHEET_DATA_COLUMN_NAME].value
 	mapIndexSheetConfigs['DATA_FILE_NAME']          = p_cCell[xConstantData.INDEX_SHEET_DATA_COLUMN_ALIAS].value
-	mapIndexSheetConfigs['DATA_SHEET_EXPORT_TYPES'] = p_cCell[xConstantData.INDEX_SHEET_DATA_COLUMN_ENABLE].value.split(',')
+	mapIndexSheetConfigs['DATA_SHEET_EXPORT_TYPES'] = p_cCell[xConstantData.INDEX_SHEET_DATA_COLUMN_ENABLE].value.upper().split(',')
+	mapIndexSheetConfigs['EXPORT_EMPTY_DATA_ITEM']  = bExportEmptyDataItem
 
 	if len(mapIndexSheetConfigs['DATA_SHEET_EXPORT_TYPES']) <= 0 :
 		return False, {}, '错误：工作表 [{0}] [{1}{2}] 单元格导出类型配置错误!'.format(p_cIndexSheet.title, xExcelHelper.ConvertColumnIndexToColumnName(xConstantData.INDEX_SHEET_DATA_COLUMN_ENABLE), p_nRowIndex)
 
-	mapIndexSheetConfigs['DATA_SHEET_EXPORT_TYPES'] = __FixExportTypes(mapIndexSheetConfigs['DATA_SHEET_EXPORT_TYPES'], p_lstExportTypes)
+	mapIndexSheetConfigs['DATA_SHEET_EXPORT_TYPES'] = __FixExportTypes(mapIndexSheetConfigs['DATA_SHEET_EXPORT_TYPES'], p_mapExportTypes)
 
 	if p_cCell[xConstantData.INDEX_SHEET_DATA_COLUMN_TABLE_ENGINE].value is None :
 		mapIndexSheetConfigs['DATA_TABLE_ENGINE'] = xConstantData.DEFAULT_DATA_TABLE_ENGINE
@@ -264,22 +303,22 @@ def __PrepareExportDirectories(p_mapExportConfigs, p_lstExportTypes) :
 
 		xFileUtility.CreateDirectory(strExportDirectory)
 
-def __ProcessGlobalFile(p_lstExportTypes, p_mapProcessMarks, p_strWorkbookName, p_mapExportConfigs, p_mapDatabaseConfigs) :
-	if len(p_lstExportTypes) <= 0 :
+def __ProcessGlobalFile(p_mapExportTypes, p_mapProcessMarks, p_strWorkbookName, p_mapExportConfigs, p_mapDatabaseConfigs) :
+	if len(p_mapExportTypes) <= 0 :
 		return
 
-	for strExportType in p_lstExportTypes :
+	for (strExportType, strExportProcessor) in p_mapExportTypes.items() :
 		if p_mapProcessMarks.get(strExportType) is None :
 			p_mapProcessMarks[strExportType] = False
 
 		if p_mapProcessMarks[strExportType] :
 			continue
 
-		cProcessorInstance = xProcessorManager.GetProcessorInstance(strExportType)
+		cProcessorInstance = xProcessorManager.GetProcessorInstance(strExportProcessor, p_mapExportConfigs['EXPORTS'][strExportType]['EXPORT_SUFFIX'], strExportType)
 
 		p_mapProcessMarks[strExportType] = cProcessorInstance.ProcessGlobalFile(p_strWorkbookName, p_mapExportConfigs, p_mapDatabaseConfigs)
 
-def __ProcessDump(p_mapExportConfigs, p_lstExportTypes) :
+def __ProcessDump(p_mapExportConfigs, p_mapExportTypes) :
 	setDirectoryFiles = xFileUtility.GetDirectoryFiles(p_mapExportConfigs['EXCEL_DIRECTORY'], p_mapExportConfigs['DEEP_PROCESS'])
 
 	for strFilePath in setDirectoryFiles :
@@ -334,7 +373,7 @@ def __ProcessDump(p_mapExportConfigs, p_lstExportTypes) :
 			if (nRowIndex - 1) <= nIgnoreRows :
 				continue
 
-			bIgnore, bSuccess, mapIndexSheetConfigs, strRaiseMessage = __AnalysisIndexSheetConfigs(cIndexSheet, cCell, nRowIndex - 1, p_lstExportTypes)
+			bIgnore, bSuccess, mapIndexSheetConfigs, strRaiseMessage = __AnalysisIndexSheetConfigs(cIndexSheet, cCell, nRowIndex - 1, p_mapExportTypes)
 
 			if bIgnore :
 				continue
@@ -359,10 +398,10 @@ def main() :
 	if not xFileUtility.IsFileOrDirectoryExist(strConfigFile) :
 		raise Exception('配置文件"{0}"不存在！'.format(strConfigFile))
 
-	mapExportConfigs, lstExportTypes = __AnalysisConfigs(strConfigFile)
+	mapExportConfigs, mapExportTypes = __AnalysisConfigs(strConfigFile)
 
-	__ProcessDump(mapExportConfigs, lstExportTypes)
-	
+	__ProcessDump(mapExportConfigs, mapExportTypes)
+
 if __name__ == '__main__' :
 	try :
 		main()

@@ -44,7 +44,7 @@ class xWorksheetConvertor :
 
 		mapProcessorInstances = {}
 
-		for strExportType in p_mapIndexSheetConfigs['DATA_SHEET_EXPORT_TYPES'] :
+		for (strExportType, strExportProcessor) in p_mapIndexSheetConfigs['DATA_SHEET_EXPORT_TYPES'].items() :
 			cDataSheetDatas = xWorksheetConvertor.__GetDataSheetDataGenerator(cWorkSheet, mapDataSheetConfigs.keys()[0], mapDataSheetConfigs.keys()[-1])
 
 			bSuccess, nCategoryLevel, mapPreloadDataMaps = xWorksheetConvertor.__GetPreloadDataMaps(cWorkSheet, p_mapExportConfigs, mapDataSheetConfigs, cDataSheetDatas, strExportType)
@@ -55,7 +55,7 @@ class xWorksheetConvertor :
 			bSuccess = False
 
 			if mapProcessorInstances.get(strExportType) is None :
-				mapProcessorInstances[strExportType] = xProcessorManager.GetProcessorInstance(strExportType)
+				mapProcessorInstances[strExportType] = xProcessorManager.GetProcessorInstance(strExportProcessor, p_mapExportConfigs['EXPORTS'][strExportType]['EXPORT_SUFFIX'], strExportType)
 				
 			if mapProcessorInstances[strExportType] is None :
 				break

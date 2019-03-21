@@ -16,15 +16,28 @@ from definitions.constant_data import xConstantData
 class xBaseProcessor(object) :
 	__metaclass__ = abc.ABCMeta
 
-	__strType = None
+	__strType   = None
+	__strSuffix = None
+	__strConfig = None
 
-	def __init__(self, p_strType = None) :
-		self.__strType = p_strType
+	def __init__(self, p_strType = None, p_strSuffix = None, p_strConfig = None) :
+		self.__strType   = p_strType
+		self.__strSuffix = p_strSuffix
+		self.__strConfig = p_strConfig
+		# print('{0}__{1}__{2}'.format(p_strType, p_strSuffix, p_strConfig))
 		return super(xBaseProcessor, self).__init__()
 
 	@property
 	def Type(self) :
 		return self.__strType
+
+	@property
+	def Suffix(self) :
+		return self.__strSuffix
+
+	@property
+	def Config(self) :
+		return self.__strConfig
 
 	def ProcessGlobalFile(self, p_strWorkbookName, p_mapExportConfigs, p_mapDatabaseConfigs) :
 		return True
@@ -41,6 +54,10 @@ class xBaseProcessor(object) :
 			raise Exception('创建目录失败 : {0}'.format(p_strExportDirectory))
 
 		return True
+
+	def PrepareExportDirectories(self, p_lstExportDirectory) :
+		for strExportDirectory in p_lstExportDirectory :
+			self.PrepareExportDirectory(strExportDirectory)
 
 	def IsEmptyLine(self, p_mapLineDatas) :
 		nLineItems = len(p_mapLineDatas)
@@ -102,10 +119,12 @@ class xBaseProcessor(object) :
 
 		strYear = ''
 
-		if cLocalTime.tm_year <= int(p_nSinceYear) :
-			strYear = '{0}'.format(p_nSinceYear)
-		else :
-			strYear = '{0} - {1}'.format(p_nSinceYear, cLocalTime.tm_year)
+#		if cLocalTime.tm_year <= int(p_nSinceYear) :
+#			strYear = '{0}'.format(p_nSinceYear)
+#		else :
+#			strYear = '{0} - {1}'.format(p_nSinceYear, cLocalTime.tm_year)
+
+		strYear = 'Since {0}'.format(p_nSinceYear)
 
 		return 'Copyright (c) {0}, {1}, All Rights Reserved.'.format(strYear, p_strOrganization)
 	
@@ -113,9 +132,45 @@ class xBaseProcessor(object) :
 		return '{0}({1})'.format(xConstantData.EC_NAME, 'https://github.com/xLemon/xExcelConvertor')
 
 	def GetExportDirectory(self, p_mapExportConfigs) :
-		strExportDirectory = p_mapExportConfigs['EXPORTS'][self.Type]['EXPORT_DIRECTORY']
+		strExportDirectory = p_mapExportConfigs['EXPORTS'][self.Config]['EXPORT_DIRECTORY']
 
 		if not xFileUtility.IsFileOrDirectoryExist(strExportDirectory) :
 			xFileUtility.CreateDirectory(strExportDirectory)
 
 		return strExportDirectory
+
+	def GetExportDirectories(self, p_mapExportConfigs) :
+		lstExportDirectories = p_mapExportConfigs['EXPORTS'][self.Config]['EXPORT_DIRECTORY'].split(xConstantData.PATH_SEPARATOR)
+
+		for strExportDirectory in lstExportDirectories :
+			if not xFileUtility.IsFileOrDirectoryExist(strExportDirectory) :
+				xFileUtility.CreateDirectory(strExportDirectory)
+
+		return lstExportDirectories
+
+	def GetCellValue(self, p_strValue, p_strDefaultValue, p_strDataType, p_bExportEmptyDataItem) :
+		if p_strValue is not None :
+			return self.FixCellValue('{0}'.format(p_strValue), p_strDataType)
+
+		if p_strDefaultValue is not None:
+			return self.FixCellValue('{0}'.format(p_strDefaultValue), p_strDataType)
+
+		if xConstantData.MYSQL_DATA_DEFINITIONS[p_strDataType]['IS_STRING'] :
+			return self.FixCellValue('', p_strDataType)
+
+		return self.FixCellValue('0', p_strDataType)
+
+	def FixCellValue(self, p_strValue, p_strDataType) :
+		if not xConstantData.MYSQL_DATA_DEFINITIONS[p_strDataType]['IS_NUMERIC'] :
+			return p_strValue
+
+		if not xExportHelper.IsNumeric(p_strValue) :
+			return p_strValue # TODO::
+
+		if xConstantData.MYSQL_DATA_DEFINITIONS[p_strDataType]['IS_INTEGER'] :
+			if xExportHelper.IsInteger(p_strValue) :
+				return p_strValue
+			else :
+				return p_strValue[0:p_strValue.find('.')]
+
+		return p_strValue

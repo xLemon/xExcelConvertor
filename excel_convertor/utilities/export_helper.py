@@ -4,9 +4,29 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
+import re
+
 from definitions.constant_data import xConstantData
 
 class xExportHelper :
+	@staticmethod
+	def IsNumeric(p_strData) :
+		regexp = re.compile(r'^[-+]?[0-9]+(\.[0-9]+)?$')
+
+		if regexp.match(p_strData) :
+			return True
+
+		return False
+
+	@staticmethod
+	def IsInteger(p_strData) :
+		regexp = re.compile(r'^[-+]?[0-9]+$')
+
+		if regexp.match(p_strData) :
+			return True
+
+		return False
+
 	@staticmethod
 	def IsDataSheetColumnLanguageAvailable(p_strDataSheetColumnLanguage, p_strExportType, p_mapExportConfigs) :
 		# 指定导出的语言类型没填的话当成all处理

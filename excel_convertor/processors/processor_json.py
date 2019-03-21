@@ -14,8 +14,8 @@ from utilities.file_utility import xFileUtility
 from definitions.constant_data import xConstantData
 
 class xProcessorJson(xBaseProcessor) :
-	def __init__(self) :
-		return super(xProcessorJson, self).__init__('JSON')
+	def __init__(self, p_strSuffix, p_strConfig) :
+		return super(xProcessorJson, self).__init__('JSON', p_strSuffix, p_strConfig)
 	
 	def ProcessExport(self, p_strWorkbookName, p_cWorkbook, p_cWorkSheet, p_mapExportConfigs, p_mapDatabaseConfigs, p_mapIndexSheetConfigs, p_mapDataSheetConfigs, p_mapPreloadDataMaps, p_nCategoryLevel) :
 		print('>>>>> 正在处理 工作表 [{0}] => [{1}]'.format(p_mapIndexSheetConfigs['DATA_SHEET'], self.Type.lower()))
@@ -24,7 +24,7 @@ class xProcessorJson(xBaseProcessor) :
 
 		self.PrepareExportDirectory(strExportDirectory)
 		
-		lstCategoryLevelColumnIndexIndexs = self.GetCategoryLevelColumnIndexList(p_nCategoryLevel, self.Type, p_mapExportConfigs, p_mapDataSheetConfigs)
+		lstCategoryLevelColumnIndexIndexs = self.GetCategoryLevelColumnIndexList(p_nCategoryLevel, self.Config, p_mapExportConfigs, p_mapDataSheetConfigs)
 		
 		mapGenerateControl                = { }
 		mapGenerateControl['level_index'] = 0
@@ -34,33 +34,33 @@ class xProcessorJson(xBaseProcessor) :
 		strContent += '{'
 
 		if p_nCategoryLevel <= 0 :
-			if p_mapExportConfigs['EXPORTS'][self.Type]['FORMAT_DATA'] :
+			if p_mapExportConfigs['EXPORTS'][self.Config]['FORMAT_DATA'] :
 				strContent += '\n\t'
 
 			strContent += '"datas"'
 
-			if p_mapExportConfigs['EXPORTS'][self.Type]['FORMAT_DATA'] :
+			if p_mapExportConfigs['EXPORTS'][self.Config]['FORMAT_DATA'] :
 				strContent += ' : ['
 			else :
 				strContent += ':['
 
 		strContent += self.__ConvertJsonContent(p_mapExportConfigs, p_mapDataSheetConfigs, p_mapPreloadDataMaps, lstCategoryLevelColumnIndexIndexs, p_nCategoryLevel, mapGenerateControl)
 		
-		if p_mapExportConfigs['EXPORTS'][self.Type]['FORMAT_DATA'] :
+		if p_mapExportConfigs['EXPORTS'][self.Config]['FORMAT_DATA'] :
 			strContent += '\n'
 
 		if p_nCategoryLevel <= 0 :
-			if p_mapExportConfigs['EXPORTS'][self.Type]['FORMAT_DATA'] :
+			if p_mapExportConfigs['EXPORTS'][self.Config]['FORMAT_DATA'] :
 				strContent += '\t'
 
 			strContent += ']'
 
-			if p_mapExportConfigs['EXPORTS'][self.Type]['FORMAT_DATA'] :
+			if p_mapExportConfigs['EXPORTS'][self.Config]['FORMAT_DATA'] :
 				strContent += '\n'
 
 		strContent += '}\n'
 
-		strFileName = '{0}.{1}'.format(p_mapIndexSheetConfigs['DATA_FILE_NAME'], self.Type.lower())
+		strFileName = '{0}.{1}'.format(p_mapIndexSheetConfigs['DATA_FILE_NAME'], self.Suffix.lower())
 		strFilePath = os.path.join(strExportDirectory, strFileName)
 
 		xFileUtility.DeleteFile(strFilePath)
@@ -92,7 +92,7 @@ class xProcessorJson(xBaseProcessor) :
 				if p_nCategoryLevel <= 0 :
 					nIdentCount += 1
 
-				if p_mapExportConfigs['EXPORTS'][self.Type]['FORMAT_DATA'] :
+				if p_mapExportConfigs['EXPORTS'][self.Config]['FORMAT_DATA'] :
 					strContent += '\n{0}'.format(self.GenerateIdentIdentifier(nIdentCount, p_mapGenerateControl['ident']))
 				
 				strKey = '{0}'.format(mixKey)
@@ -100,7 +100,7 @@ class xProcessorJson(xBaseProcessor) :
 
 				strContent += '"{0}"'.format(strKey)
 				
-				if p_mapExportConfigs['EXPORTS'][self.Type]['FORMAT_DATA'] :
+				if p_mapExportConfigs['EXPORTS'][self.Config]['FORMAT_DATA'] :
 					strContent += ' : '
 				else :
 					strContent += ':'
@@ -112,10 +112,10 @@ class xProcessorJson(xBaseProcessor) :
 
 				strContent += self.__ConvertJsonContent(p_mapExportConfigs, p_mapDataSheetConfigs, p_mixPreloadDatas[mixKey], p_lstCategoryLevelColumnIndexIndexs, p_nCategoryLevel, p_mapGenerateControl)
 				
-				if p_mapExportConfigs['EXPORTS'][self.Type]['FORMAT_DATA'] and p_mapGenerateControl['level_index'] < len(p_lstCategoryLevelColumnIndexIndexs) :
+				if p_mapExportConfigs['EXPORTS'][self.Config]['FORMAT_DATA'] and p_mapGenerateControl['level_index'] < len(p_lstCategoryLevelColumnIndexIndexs) :
 					strContent += '\n{0}'.format(self.GenerateIdentIdentifier(nIdentCount, p_mapGenerateControl['ident']))
 				
-				if p_mapExportConfigs['EXPORTS'][self.Type]['FORMAT_DATA'] and type(p_mixPreloadDatas[mixKey]) == list and len(p_mixPreloadDatas[mixKey]) > 1 :
+				if p_mapExportConfigs['EXPORTS'][self.Config]['FORMAT_DATA'] and type(p_mixPreloadDatas[mixKey]) == list and len(p_mixPreloadDatas[mixKey]) > 1 :
 					strContent += '\n{0}'.format(self.GenerateIdentIdentifier(nIdentCount, p_mapGenerateControl['ident']))
 					
 				if type(p_mixPreloadDatas[mixKey]) == list and len(p_mixPreloadDatas[mixKey]) > 1 :
@@ -147,22 +147,22 @@ class xProcessorJson(xBaseProcessor) :
 					continue
 
 				if nPreloadDataSize > 1 :
-					if p_mapExportConfigs['EXPORTS'][self.Type]['FORMAT_DATA'] :
+					if p_mapExportConfigs['EXPORTS'][self.Config]['FORMAT_DATA'] :
 						strContent += '\n{0}'.format(self.GenerateIdentIdentifier(nIdentCount + 1, p_mapGenerateControl['ident']))
 					strContent += '{'
 
 				for nColumnIndex in p_mapDataSheetConfigs :
-					if not xExportHelper.IsDataSheetColumnLanguageAvailable(p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_LANGUAGE_CODE], self.Type, p_mapExportConfigs) :
+					if not xExportHelper.IsDataSheetColumnLanguageAvailable(p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_LANGUAGE_CODE], self.Config, p_mapExportConfigs) :
 						continue
 
-					if not xExportHelper.IsDataSheetColumnExportTypeAvailable(p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_EXPORT_IDENTIFIER], self.Type, p_mapExportConfigs) :
+					if not xExportHelper.IsDataSheetColumnExportTypeAvailable(p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_EXPORT_IDENTIFIER], self.Config, p_mapExportConfigs) :
 						continue
 
 					# if p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_AUTO_INCREMENT_IDENTIFIER] is not None :
 						# continue
 
 					strCellValue = ''
-					strFieldName = xExportHelper.GetFieldNameAsI18N(p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_FIELD], p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_LANGUAGE_CODE], self.Type, p_mapExportConfigs)
+					strFieldName = xExportHelper.GetFieldNameAsI18N(p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_FIELD], p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_LANGUAGE_CODE], self.Config, p_mapExportConfigs)
 
 					if mapLineDatas[strFieldName] is None :
 						if p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_DEFAULT_VALUE] is not None :
@@ -180,12 +180,12 @@ class xProcessorJson(xBaseProcessor) :
 					if nDataColumnIndex > 0 :
 						strContent += ','
 	
-					if p_mapExportConfigs['EXPORTS'][self.Type]['FORMAT_DATA'] :
+					if p_mapExportConfigs['EXPORTS'][self.Config]['FORMAT_DATA'] :
 						strContent += ' '
 
 					strContent += '"{0}"'.format(strFieldName)
 
-					if p_mapExportConfigs['EXPORTS'][self.Type]['FORMAT_DATA'] :
+					if p_mapExportConfigs['EXPORTS'][self.Config]['FORMAT_DATA'] :
 						strContent += ' : '
 					else :
 						strContent += ':'

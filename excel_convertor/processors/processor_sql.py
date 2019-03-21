@@ -14,23 +14,26 @@ from utilities.file_utility import xFileUtility
 from definitions.constant_data import xConstantData
 
 class xProcessorSql(xBaseProcessor) :
-	def __init__(self) :
-		return super(xProcessorSql, self).__init__('SQL')
+	def __init__(self, p_strSuffix, p_strConfig) :
+		return super(xProcessorSql, self).__init__('SQL', p_strSuffix, p_strConfig)
 
 	def ProcessGlobalFile(self, p_strWorkbookName, p_mapExportConfigs, p_mapDatabaseConfigs) :
 		strExportDirectory = self.GetExportDirectory(p_mapExportConfigs)
 
 		self.PrepareExportDirectory(strExportDirectory)
 
-		strFileName = '{0}.{1}'.format(p_strWorkbookName, self.Type.lower())
+		strFileName = '{0}.{1}'.format(p_strWorkbookName, self.Suffix.lower())
 
 		xFileUtility.DeleteFile(os.path.join(strExportDirectory, strFileName))
 
-		strContent  = '\n'
-		strContent += '-- Database - {0}\n'.format(p_mapDatabaseConfigs['DATABASE_NAME'])
-		strContent += '\n'
-		strContent += 'CREATE DATABASE IF NOT EXISTS `{0}` DEFAULT CHARACTER SET {1} COLLATE {2};\n\n'.format(p_mapDatabaseConfigs['DATABASE_NAME'], p_mapDatabaseConfigs['DATABASE_CHARSET'], p_mapDatabaseConfigs['DATABASE_COLLATE'])
-				
+		strContent = ''
+
+		if p_mapDatabaseConfigs['DATABASE_NAME'] is not None and len(p_mapDatabaseConfigs['DATABASE_NAME']) > 0 :
+			strContent += '\n'
+			strContent += '-- Database - {0}\n'.format(p_mapDatabaseConfigs['DATABASE_NAME'])
+			strContent += '\n'
+			strContent += 'CREATE DATABASE IF NOT EXISTS `{0}` DEFAULT CHARACTER SET {1} COLLATE {2};\n\n'.format(p_mapDatabaseConfigs['DATABASE_NAME'], p_mapDatabaseConfigs['DATABASE_CHARSET'], p_mapDatabaseConfigs['DATABASE_COLLATE'])
+			
 		if not xFileUtility.WriteDataToFile(os.path.join(strExportDirectory, strFileName), 'a+', strContent) :
 			raise Exception('文件{0}写入失败！'.format(os.path.join(strExportDirectory, strFileName)))
 
@@ -39,16 +42,21 @@ class xProcessorSql(xBaseProcessor) :
 	def ProcessExport(self, p_strWorkbookName, p_cWorkbook, p_cWorkSheet, p_mapExportConfigs, p_mapDatabaseConfigs, p_mapIndexSheetConfigs, p_mapDataSheetConfigs, p_mapPreloadDataMaps, p_nCategoryLevel) :
 		print('>>>>> 正在处理 工作表 [{0}] => [{1}]'.format(p_mapIndexSheetConfigs['DATA_SHEET'], self.Type.lower()))
 
+		strDatabaseName = ''
+
+		if p_mapDatabaseConfigs['DATABASE_NAME'] is not None and len(p_mapDatabaseConfigs['DATABASE_NAME']) > 0 :
+			strDatabaseName = '`{0}`.'.format(p_mapDatabaseConfigs['DATABASE_NAME'])
+
 		strContent  = ''
-		strContent += '-- Table structure for table `{0}`.`{1}{2}`\n\n'.format(p_mapDatabaseConfigs['DATABASE_NAME'], p_mapDatabaseConfigs['DATA_TABLE_PREFIX'], p_mapIndexSheetConfigs['DATA_FILE_NAME'])
+		strContent += '-- Table structure for table {0}`{1}{2}`\n\n'.format(strDatabaseName, p_mapDatabaseConfigs['DATA_TABLE_PREFIX'], p_mapIndexSheetConfigs['DATA_FILE_NAME'])
 		strContent += self.__ConvertCreateTableSQL(p_mapExportConfigs, p_mapDatabaseConfigs, p_mapIndexSheetConfigs, p_mapDataSheetConfigs)
 		strContent += '\n\n'
 
-		strContent += '-- Dumping data for table `{0}`.`{1}{2}`\n\n'.format(p_mapDatabaseConfigs['DATABASE_NAME'], p_mapDatabaseConfigs['DATA_TABLE_PREFIX'], p_mapIndexSheetConfigs['DATA_FILE_NAME'])
+		strContent += '-- Dumping data for table {0}`{1}{2}`\n\n'.format(strDatabaseName, p_mapDatabaseConfigs['DATA_TABLE_PREFIX'], p_mapIndexSheetConfigs['DATA_FILE_NAME'])
 		strContent += self.__ConvertTableDataSQL(p_mapExportConfigs, p_mapDatabaseConfigs, p_mapIndexSheetConfigs, p_mapDataSheetConfigs, p_mapPreloadDataMaps, p_nCategoryLevel)
 		strContent += '\n\n'
 		
-		strFileName = '{0}.{1}'.format(p_strWorkbookName, self.Type.lower())
+		strFileName = '{0}.{1}'.format(p_strWorkbookName, self.Suffix.lower())
 		strFilePath = os.path.join(self.GetExportDirectory(p_mapExportConfigs), strFileName)
 
 		bSuccess = xFileUtility.WriteDataToFile(strFilePath, 'a+', strContent)
@@ -67,24 +75,29 @@ class xProcessorSql(xBaseProcessor) :
 		lstPrimaryKeys = []
 		lstUniqueKeys  = []
 
+		strDatabaseName = ''
+
+		if p_mapDatabaseConfigs['DATABASE_NAME'] is not None and len(p_mapDatabaseConfigs['DATABASE_NAME']) > 0 :
+			strDatabaseName = '`{0}`.'.format(p_mapDatabaseConfigs['DATABASE_NAME'])
+
 		strContent  = ''
-		strContent += 'DROP TABLE IF EXISTS `{0}`.`{1}{2}`;'.format(p_mapDatabaseConfigs['DATABASE_NAME'], p_mapDatabaseConfigs['DATA_TABLE_PREFIX'], p_mapIndexSheetConfigs['DATA_FILE_NAME'])
+		strContent += 'DROP TABLE IF EXISTS {0}`{1}{2}`;'.format(strDatabaseName, p_mapDatabaseConfigs['DATA_TABLE_PREFIX'], p_mapIndexSheetConfigs['DATA_FILE_NAME'])
 		strContent += '\n\n'
-		strContent += 'CREATE TABLE `{0}`.`{1}{2}` (\n'.format(p_mapDatabaseConfigs['DATABASE_NAME'], p_mapDatabaseConfigs['DATA_TABLE_PREFIX'], p_mapIndexSheetConfigs['DATA_FILE_NAME'])
+		strContent += 'CREATE TABLE {0}`{1}{2}` (\n'.format(strDatabaseName, p_mapDatabaseConfigs['DATA_TABLE_PREFIX'], p_mapIndexSheetConfigs['DATA_FILE_NAME'])
 
 		nIndex = 0
 
 		for nColumnIndex in p_mapDataSheetConfigs :
-			if not xExportHelper.IsDataSheetColumnLanguageAvailable(p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_LANGUAGE_CODE], self.Type, p_mapExportConfigs) :
+			if not xExportHelper.IsDataSheetColumnLanguageAvailable(p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_LANGUAGE_CODE], self.Config, p_mapExportConfigs) :
 				continue
 
-			if not xExportHelper.IsDataSheetColumnExportTypeAvailable(p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_EXPORT_IDENTIFIER], self.Type, p_mapExportConfigs) :
+			if not xExportHelper.IsDataSheetColumnExportTypeAvailable(p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_EXPORT_IDENTIFIER], self.Config, p_mapExportConfigs) :
 				continue
 
 			# if p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_AUTO_INCREMENT_IDENTIFIER] is not None :
 				# continue
 
-			strFieldName = xExportHelper.GetFieldNameAsI18N(p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_FIELD], p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_LANGUAGE_CODE], self.Type, p_mapExportConfigs)
+			strFieldName = xExportHelper.GetFieldNameAsI18N(p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_FIELD], p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_LANGUAGE_CODE], self.Config, p_mapExportConfigs)
 
 			if nIndex > 0 :
 				strContent += ',\n'
@@ -176,13 +189,13 @@ class xProcessorSql(xBaseProcessor) :
 		nIndex = 0
 
 		for nColumnIndex in p_mapDataSheetConfigs :
-			if not xExportHelper.IsDataSheetColumnLanguageAvailable(p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_LANGUAGE_CODE], self.Type, p_mapExportConfigs) :
+			if not xExportHelper.IsDataSheetColumnLanguageAvailable(p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_LANGUAGE_CODE], self.Config, p_mapExportConfigs) :
 				continue
 
-			if not xExportHelper.IsDataSheetColumnExportTypeAvailable(p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_EXPORT_IDENTIFIER], self.Type, p_mapExportConfigs) :
+			if not xExportHelper.IsDataSheetColumnExportTypeAvailable(p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_EXPORT_IDENTIFIER], self.Config, p_mapExportConfigs) :
 				continue
 
-			strFieldName = xExportHelper.GetFieldNameAsI18N(p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_FIELD], p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_LANGUAGE_CODE], self.Type, p_mapExportConfigs)
+			strFieldName = xExportHelper.GetFieldNameAsI18N(p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_FIELD], p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_LANGUAGE_CODE], self.Config, p_mapExportConfigs)
 
 			# if p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_AUTO_INCREMENT_IDENTIFIER] is not None :
 				# continue
@@ -236,10 +249,10 @@ class xProcessorSql(xBaseProcessor) :
 				nDataColumnIndex = 0
 
 				for nColumnIndex in p_mapDataSheetConfigs :
-					if not xExportHelper.IsDataSheetColumnLanguageAvailable(p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_LANGUAGE_CODE], self.Type, p_mapExportConfigs) :
+					if not xExportHelper.IsDataSheetColumnLanguageAvailable(p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_LANGUAGE_CODE], self.Config, p_mapExportConfigs) :
 						continue
 
-					if not xExportHelper.IsDataSheetColumnExportTypeAvailable(p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_EXPORT_IDENTIFIER], self.Type, p_mapExportConfigs) :
+					if not xExportHelper.IsDataSheetColumnExportTypeAvailable(p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_EXPORT_IDENTIFIER], self.Config, p_mapExportConfigs) :
 						continue
 
 					# if p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_AUTO_INCREMENT_IDENTIFIER] is not None :
@@ -249,7 +262,7 @@ class xProcessorSql(xBaseProcessor) :
 						strContent += ', '
 
 					strCellValue = ''
-					strFieldName = xExportHelper.GetFieldNameAsI18N(p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_FIELD], p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_LANGUAGE_CODE], self.Type, p_mapExportConfigs)
+					strFieldName = xExportHelper.GetFieldNameAsI18N(p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_FIELD], p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_LANGUAGE_CODE], self.Config, p_mapExportConfigs)
 					
 					if mapLineDatas[strFieldName] is None :
 						if p_mapDataSheetConfigs[nColumnIndex][xConstantData.DATA_SHEET_ROW_DEFAULT_VALUE] is not None :
